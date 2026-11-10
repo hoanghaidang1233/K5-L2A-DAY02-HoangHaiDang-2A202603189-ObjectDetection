@@ -4,10 +4,10 @@
 
 - Họ tên: Hoàng Hải Đăng
 - MSSV: 2A202603189
-- Email:
+- Email:26ai.danghh2@vinuni.edu.vn
 - Lớp: K5-L2A
 - Link repo bài làm: https://github.com/hoanghaidang1233/K5-L2A-DAY02-HoangHaiDang-2A202603189-ObjectDetection
-- Link Colab đã chạy: https://colab.research.google.com/drive/190inFZaKsSsY9NeIKyWziIFa1mSIUCXZ
+- Link Colab đã chạy: https://colab.research.google.com/drive/190inFZaKsSsY9NeIKyWziIFa1mSIUCXZ#scrollTo=3e0508d8
 
 ## 2. Schema và mini guideline
 
