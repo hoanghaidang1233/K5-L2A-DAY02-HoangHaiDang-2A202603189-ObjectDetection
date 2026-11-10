@@ -7,7 +7,7 @@
 - Email:
 - Lớp: K5-L2A
 - Link repo bài làm: https://github.com/hoanghaidang1233/K5-L2A-DAY02-HoangHaiDang-2A202603189-ObjectDetection
-- Link Colab đã chạy: _(TODO: dán link sau khi chạy notebook)_
+- Link Colab đã chạy: https://colab.research.google.com/drive/190inFZaKsSsY9NeIKyWziIFa1mSIUCXZ
 
 ## 2. Schema và mini guideline
 
@@ -46,18 +46,36 @@ Kết quả sau rework: [`outputs/annotation_evaluation.json`](../../outputs/ann
 
 ## 5. Kết quả YOLO
 
-- Runtime, GPU/CPU, phiên bản Ultralytics và Torch:
-- Các tham số thay đổi so với notebook nếu có và lý do:
-- Đường dẫn best checkpoint trong phiên chạy:
+- Runtime, GPU/CPU, phiên bản Ultralytics và Torch: Google Colab, GPU Tesla T4 (15 GB), Python 3.13.16, Ultralytics 8.4.208, Torch 2.14.1+cu130. Notebook clone repo ở commit `15d1aa0` (nhãn sau rework).
+- Các tham số thay đổi so với notebook nếu có và lý do: không thay đổi (yolo26n.pt, epochs=50, imgsz=640, batch=-1, seed=20260909).
+- Đường dẫn best checkpoint trong phiên chạy: `/content/Day2-Lab/outputs/yolo26_runs/vehicle_annotation/weights/best.pt` (không commit file `.pt`).
 
 | Chỉ số trên 10 ảnh eval | Giá trị |
 |---|---:|
-| Precision | |
-| Recall | |
-| mAP50 | |
-| mAP50–95 | |
+| Precision | 0.7197 |
+| Recall | 0.6256 |
+| mAP50 | 0.6436 |
+| mAP50–95 | 0.4406 |
 
-Đặt cả 2 folder `assets/eval_predictions/` và `assets/yolo26_runs/` (giải nén từ `day2_colab_outputs.zip`) cạnh báo cáo và dẫn link tương đối. Không chỉ ghi số; chỉ ra ít nhất một ảnh và vật thể cụ thể.
+Chi tiết theo lớp (cell đánh giá `best_model.val` trên 10 ảnh eval):
+
+| Lớp | Ảnh | Instances | Precision | Recall | mAP50 | mAP50–95 |
+|---|--:|--:|--:|--:|--:|--:|
+| car | 10 | 94 | 0.724 | 0.809 | 0.886 | 0.616 |
+| truck | 5 | 5 | 0.584 | 0.600 | 0.396 | 0.255 |
+| bus | 2 | 2 | 0.790 | 0.500 | 0.524 | 0.419 |
+| van | 6 | 12 | 0.780 | 0.593 | 0.768 | 0.472 |
+
+Kết quả Colab (giải nén từ `day2_colab_outputs.zip`, đã bỏ file `.pt`):
+
+- Ảnh dự đoán trên 10 ảnh eval (conf=0.25): [drive_051](assets/eval_predictions/visuals/drive_051.jpg) · [drive_052](assets/eval_predictions/visuals/drive_052.jpg) · [drive_053](assets/eval_predictions/visuals/drive_053.jpg) · [drive_054](assets/eval_predictions/visuals/drive_054.jpg) · [drive_055](assets/eval_predictions/visuals/drive_055.jpg) · [drive_056](assets/eval_predictions/visuals/drive_056.jpg) · [drive_057](assets/eval_predictions/visuals/drive_057.jpg) · [drive_058](assets/eval_predictions/visuals/drive_058.jpg) · [drive_059](assets/eval_predictions/visuals/drive_059.jpg) · [drive_060](assets/eval_predictions/visuals/drive_060.jpg)
+- Log train theo epoch: [results.csv](assets/yolo26_runs/vehicle_annotation/results.csv), [results.png](assets/yolo26_runs/vehicle_annotation/results.png)
+- Đánh giá best checkpoint: [confusion matrix](assets/yolo26_runs/vehicle_eval/confusion_matrix.png), [confusion matrix chuẩn hóa](assets/yolo26_runs/vehicle_eval/confusion_matrix_normalized.png), [PR curve](assets/yolo26_runs/vehicle_eval/BoxPR_curve.png), [F1 curve](assets/yolo26_runs/vehicle_eval/BoxF1_curve.png)
+- So sánh nhãn gold và dự đoán trên batch eval: [val_batch0_labels.jpg](assets/yolo26_runs/vehicle_eval/val_batch0_labels.jpg) và [val_batch0_pred.jpg](assets/yolo26_runs/vehicle_eval/val_batch0_pred.jpg)
+
+![Ma trận nhầm lẫn trên eval](assets/yolo26_runs/vehicle_eval/confusion_matrix_normalized.png)
+
+_(TODO: chỉ ra ít nhất một ảnh và vật thể cụ thể khi trả lời các câu dưới.)_
 
 Trả lời bốn câu hỏi cuối notebook:
 
@@ -70,7 +88,7 @@ Trả lời bốn câu hỏi cuối notebook:
 
 | Bước/thời điểm | Lỗi quan sát | Cách đã thử | Kết quả/còn thiếu |
 |---|---|---|---|
-| | | | |
+| CP6 — lần chạy Colab đầu tiên | Notebook clone commit `b598013` (nhãn trước rework, ID truck/bus/van bị lệch). mAP50 = 0.277; bus mAP50 = 0.016, van mAP50 = 0.075. | Push bản nhãn đã sửa ID (`15d1aa0`), xóa runtime, chuyển sang GPU T4 và chạy lại toàn bộ notebook. | mAP50 tăng lên 0.644. Kết quả ở mục 5 là của lần chạy lại. |
 
 ## 7. Tự đánh giá theo rubric
 
