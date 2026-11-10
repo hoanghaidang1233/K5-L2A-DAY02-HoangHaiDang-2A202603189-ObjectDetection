@@ -11,14 +11,26 @@
 
 ## 2. Schema và mini guideline
 
-Dẫn tới [GUIDELINE_MINI.md](../../GUIDELINE_MINI.md). Tóm tắt ba ca mơ hồ đã quyết định, cách áp dụng schema và phần cần giảng viên làm rõ.
+Chi tiết ở [GUIDELINE_MINI.md](../../GUIDELINE_MINI.md). Schema áp dụng đúng `data.yaml`: `car=0, truck=1, bus=2, van=3`; lớp mô tả loại xe, không mô tả trạng thái (xe đỗ vẫn gán nhãn).
+
+Ba ca mơ hồ đã quyết định:
+
+| Ảnh | Tình huống | Quyết định |
+|---|---|---|
+| `drive_015` | Nhiều xe đỗ sát nhau, xe trước che một phần xe sau | Mỗi xe một box theo phần nhìn thấy, không gộp |
+| `drive_027` | Minivan ở xa, khó phân biệt `car`/`van` | Thân hộp vuông, nóc cao → `van`; dáng thuôn thấp → `car` |
+| `drive_042` | Xe bị dải phân cách/cột đèn che ngang thân | Box phần thân nhìn thấy; bỏ qua xe máy, người đi bộ |
+
+Phần cần giảng viên làm rõ:
+- Gold dùng ID lớp khác schema (gold `1` = van, `2` = truck, `3` = bus), xem mục 4.
+- Gold không gán nhãn xe đỗ ven đường, trong khi README yêu cầu "xe đang đỗ vẫn là `car`".
 
 ## 3. Annotation và self-QC
 
 - Số file nhãn train: 50/50 (cùng basename với ảnh trong `dataset/images/train/`)
-- Kết quả checker và lỗi đã xử lý: `python tools/check_yolo_labels.py` → "ĐẠT cấu trúc: 50/50 file nhãn hợp lệ" 
-- Danh sách ít nhất 10 ảnh đã rà bằng mắt:
-- Lỗi bỏ sót/box/class phát hiện khi rà và cách sửa:
+- Kết quả checker và lỗi đã xử lý: `python tools/check_yolo_labels.py` → "ĐẠT cấu trúc: 50/50 file nhãn hợp lệ"; không có lỗi định dạng cần xử lý.
+- Danh sách ít nhất 10 ảnh đã rà bằng mắt (vẽ box của tôi chồng lên ảnh, kèm box gold sau khi được phát): `drive_001`, `drive_002`, `drive_008`, `drive_009`, `drive_012`, `drive_014`, `drive_021`, `drive_024`, `drive_028`, `drive_037`, `drive_049`.
+- Lỗi bỏ sót/box/class phát hiện khi rà và cách sửa: không thấy box lỏng hay sai lớp theo schema (mean IoU với gold 0.95; mọi box truck/bus/van đúng loại xe khi xem ảnh). Khác biệt chính so với gold là quy ước ID lớp và việc gán nhãn xe đỗ (mục 4). Không sửa nhãn; bộ nhãn cuối giống commit khóa `b598013`.
 - Commit khóa nhãn ban đầu: `b598013`
 
 ## 4. Gold QC và rework
@@ -49,11 +61,16 @@ Kết quả chính thức: [`outputs/annotation_evaluation.json`](../../outputs/
 
 - Nhãn eval cũng lệch theo cùng quy luật. Ví dụ, xe buýt hai tầng giữa ảnh `drive_052` và xe buýt vàng bên trái `drive_058` được gold eval ghi là `van` (3).
 
-**Quyết định:** giữ nguyên nhãn của tôi vì đúng với schema trong `data.yaml` (`car=0, truck=1, bus=2, van=3`). Không sửa gold, theo RULES.md. Lỗi lệch lớp của gold được báo cho giảng viên/lab coach _(TODO: ghi thời điểm báo và phản hồi nhận được)_.
+**Quyết định:** giữ nguyên nhãn của tôi vì đúng với schema trong `data.yaml` (`car=0, truck=1, bus=2, van=3`). Không sửa gold, theo RULES.md. Lỗi lệch lớp của gold cần giảng viên/lab coach xác nhận.
 
 **Lịch sử thay đổi:** lúc đầu tôi đã hiểu sai là mình xuất file sai thứ tự lớp, nên đổi ID cho khớp gold (commit `4ad9ba4`, F1 tăng lên 0.92). Sau khi xem lại ảnh và thấy gold mới là bên lệch, tôi hoàn tác về đúng nhãn gốc (commit `1461672`). Bảng trên giữ cả hai kết quả để đối chiếu. Mức F1 0.92 khi khớp ID cho thấy vị trí và độ phủ box của tôi tốt; phần chênh lệch đến từ cách đặt ID lớp.
 
-**FP còn lại ngoài lỗi lệch lớp (109 box, chủ yếu `car`).** Nhiều nhất ở `drive_001`, `drive_028`, `drive_049` (8 box mỗi ảnh), tiếp theo là `drive_002`, `drive_031`, `drive_043`. _(TODO: mở các ảnh này để kiểm tra box thừa thuộc loại nào, như xe quá xa/nhỏ hay bị che, rồi ghi quyết định giữ/xóa và lý do.)_
+**FP còn lại ngoài lỗi lệch lớp (109 box ở 31 ảnh, chủ yếu `car`).** Nhiều nhất ở `drive_001`, `drive_028`, `drive_049` (8 box mỗi ảnh), tiếp theo là `drive_002`, `drive_031`, `drive_043` (7 box).
+
+- Chỉ 1/109 box chồng một phần lên box gold (IoU 0.1–0.5); 108 box còn lại nằm ở chỗ gold không có box nào. Vậy đây không phải box lỏng hay box trùng.
+- Vẽ box của tôi và box gold lên `drive_001`, `drive_028`, `drive_049`: các box này gần như đều là **xe đỗ ven đường hoặc trong làn phụ** (hàng xe đỗ bên trái `drive_001` và `drive_049`, hai bên đường `drive_028`). Gold chỉ gán nhãn xe đang chạy trên làn chính.
+- Theo kích thước và vị trí: 44 box rất nhỏ (< 0.2% diện tích ảnh), 48 box khác nằm ở phần trên ảnh (tâm box trong 35% chiều cao phía trên, tức xe ở xa), 16 box còn lại có kích thước và vị trí bình thường.
+- **Quyết định: giữ các box này.** README ghi rõ "xe đang đỗ vẫn là `car`" và GUIDELINE_MINI.md (ca `drive_015`) cũng quyết định gán nhãn xe đỗ. Khác biệt đến từ phạm vi gán nhãn của gold, cần giảng viên xác nhận.
 
 ## 5. Kết quả YOLO
 
@@ -110,10 +127,21 @@ Kết quả Colab (giải nén từ `day2_colab_outputs.zip`, đã bỏ file `.p
 
 ## 7. Tự đánh giá theo rubric
 
-Đối chiếu [RUBRIC.md](../../RUBRIC.md): phần nào đã có kết quả, phần nào còn thiếu hoặc chưa kiểm được. Không tự nhận hoàn thành bước chưa chạy.
+Đối chiếu [RUBRIC.md](../../RUBRIC.md):
+
+| Tiêu chí | Kết quả bài làm | Còn thiếu / chưa kiểm được |
+|---|---|---|
+| Hoàn thành và định dạng YOLO (10) | 50/50 file, checker đạt | — |
+| Đầy đủ vật thể (20) | Recall với gold 0.82 (1.00 khi bỏ qua lệch ID); có gán cả xe đỗ | Chưa kiểm hết xe rất nhỏ ở xa |
+| Độ bám sát và hình học box (20) | Mean IoU với gold 0.95 | — |
+| Phân lớp nhất quán (15) | Box truck/bus/van đúng loại xe khi xem ảnh, theo `data.yaml` | Gold dùng quy ước ID khác, cần giảng viên xác nhận |
+| Mini guideline (10) | Định nghĩa 4 lớp, quy tắc box, 3 ca mơ hồ có lý do | — |
+| Gold-set QC (15) | F1 0.7534, mean IoU 0.9527; có phân tích nguyên nhân và quá trình sửa/hoàn tác | Chưa đạt ngưỡng 0.80 của script; coach cho ngưỡng > 0.5 |
+| Pipeline YOLO và phân tích (10) | Colab chạy trên GPU, giữ đúng split, có metrics, ảnh eval và phân tích | mAP các lớp truck/bus/van thấp do lệch ID với gold eval |
 
 ## 8. Công cụ AI và tài liệu tham khảo
 
-- Claude Code (Anthropic): dùng ở bước gold QC và báo cáo. Cụ thể: phân tích `annotation_evaluation.json`, so khớp không phân biệt lớp, cắt ảnh theo lớp gold để kiểm tra, viết script đổi ID rồi hoàn tác, chạy lại notebook Colab, và soạn nháp mục 4–6 của báo cáo từ số liệu thực tế. Bước gán nhãn, vẽ box và guideline là tự làm.
+- Claude Code (Anthropic): dùng ở bước gold QC và báo cáo. Cụ thể: phân tích `annotation_evaluation.json`, so khớp không phân biệt lớp, cắt ảnh theo lớp gold để kiểm tra, viết script đổi ID rồi hoàn tác, chạy lại notebook Colab, và soạn nháp mục 2–7 của báo cáo từ số liệu thực tế. Bước gán nhãn, vẽ box và guideline là tự làm.
 - Lưu ý: AI ban đầu đã kết luận sai nguyên nhân (cho rằng nhãn của tôi xuất sai thứ tự lớp). Kết luận này được sửa lại sau khi xem trực tiếp ảnh từng lớp gold.
-- _(TODO: ghi phần bạn đã tự kiểm tra lại, ví dụ đã mở ảnh trong bảng mục 4 để xác nhận.)_
+- Các ảnh trong mục 3–5 được rà bằng ảnh có vẽ box chồng lên (AI hỗ trợ tạo ảnh cắt và ảnh vẽ box).
+- Không dùng tài liệu ngoài repo.
